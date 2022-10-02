@@ -1,3 +1,16 @@
+/* Copyright (c) 2022 Konstantin Kukushkin, Pur3 Ltd. See the file LICENSE for copying permission. */
+
+/*
+  Модуль содержит классы и другие ресурсы для работы с датчиками газа серии MQ.
+  Пример для использования
+```
+
+
+```
+*/
+ 
+
+
 /**
  * Класс < GasMonitorError > наследует и расширяет возможности базового класса ошибок.
  * Класс предназначен для поддержки ошибок класса < ClassGasMonitor_MQ >
@@ -13,36 +26,38 @@ class GasMonitorError extends Error {
 }
 
 /**
- * Класс < ClassGasMonitor_MQ > обеспечивает контроль концентрации метана
+ * Для работы класса <ClassGasMonitor_MQ> требуется объект типа <ObjectClassGasMonitor_MQ>, 
+ * необходимый в качестве передачи основного аргумента конструктору классса <ClassGasMonitor_MQ>
+ * Для этого вводится пользовательский тип в соответствии с синтаксисом JSDoc
+ * @typedef  {Object} ObjectClassGasMonitor_MQ
+ * @property {Object} portADC         - порт получения данных //обязательное поле
+ * @property {Object} portHeat        - порт управления нагревателем
+ * @property {string} model           - модель датчика (например MQ4)
+ * @property {number} timeHeat        - время прогрева датчика перед измерением
+ * @property {number} timeMeasurement - интервал опроса датчика _timeMeasurement
+ * @property {number} startV          - значение напряжение для первоначального заполнения массива
+ * @property {number} num             - длина массива данных датчика
+ * @property {number} vref            - опорное значение напряжения АЦП
+ */
+
+
+/**
+ * Класс <ClassGasMonitor_MQ> обеспечивает контроль концентрации метана
  * в помещении
- * @param {string} _portADC         1- порт получения данных
- * @param {string} _portHeat        2- порт управления нагревателем
- * @param {string} _model           3- модель датчика (например MQ4)
- * @param {number} _timeHeat        4- время прогрева датчика перед измерением
- * @param {number} _timeMeasurement 5- интервал опроса датчика _timeMeasurement
- * @param {number} _startV          6- значение напряжение для первоначального заполнения массива
- * @param {number} _num             7- длина массива данных датчика
- * @param {number} _vref            8- опорное значение напряжения АЦП
+ * @param {ObjectClassGasMonitor_MQ} _ops - обект с инициализирующими данными :
  * 
  */
 class ClassGasMonitor_MQ {
-    constructor( _portADC
-                ,_portHeat
-                ,_model
-                ,_timeHeat
-                ,_timeMeasurement
-                ,_startV
-                ,_num
-                ,_vref
-    ) {
-        this.PortADC =  _portADC;
-        this.PortHeat = _portHeat;
-        this.Model = _model;
-        this.TimeHeat = _timeHeat;//время прогрева датчика
-        this.TimeMeasurement = _timeMeasurement;
-        this.StartV = _startV; //стартовое значение для заполнения массива
-        this.Num = _num; //длина массива
-        this.Vref = _vref || 3.3;
+    constructor( _ops)
+     {
+        this.PortADC = _ops.portADC;//порт АЦП для считывания данных с датчика
+        this.PortHeat = _ops.portHeat;//порт ШИМ для управления нагревателем 
+        this.Model = _ops.model;//одель датчика
+        this.TimeHeat = _ops.timeHeat;//время прогрева датчика
+        this.TimeMeasurement = _ops.timeMeasurement;
+        this.StartV = _ops.startV; //стартовое значение для заполнения массива
+        this.Num = _ops.num; //длина массива
+        this.Vref = _ops.vref || E.getValueVref;
 
         this._Value = 0; //значение датчика - концентрации газа
         this.Arr = []; //массив данных датчика, для вычисления среднего значения
@@ -76,8 +91,35 @@ class ClassGasMonitor_MQ {
          * вызовов в асинхронном коде, например setTimeout(...), setInterval(...).
          * Посредством поля запускает аналогичный метод < CycleReadValue > с привязкой к контексту
          * экземпляра класса
-         */
+         */ 
         this.CycleReadValueBind = this.CycleReadValue.bind(this);
+        if (typeof(_ops.portADC) === undefined) {
+            console.log ("the portADC argument is not specified");
+        }
+        else  if (typeof(_ops) === undefined) {
+            console.log ("required argument is missing");
+        }
+        else  if (typeof(_ops.portHeat) === undefined) {
+            console.log ("the portHeat argument is not specified");
+        }
+        else if (typeof(_ops.model) === undefined) {
+            console.log ("the model argument is not specified");
+        }
+        else if (typeof(_ops.vref) === undefined) {
+            console.log ("the vref argument is not specified");
+        }
+        else if (typeof(_ops.num) === undefined) {
+            console.log ("the num argument is not specified");
+        }
+        else if (typeof(_ops.startV) === undefined) {
+            console.log ("the startV argument is not specified");
+        }
+        else if (typeof(_ops.timeHeat) === undefined) {
+            console.log ("the timeHeat argument is not specified");
+        }
+        else if (typeof(_ops.timeMeasurement) === undefined) {
+            console.log ("the timeMeasurement argument is not specified");
+        }
     }
     /***********************************************КОНСТАНТЫ КЛАССА***********************************************/
     /**
@@ -115,6 +157,12 @@ class ClassGasMonitor_MQ {
      */
     static get ERROR_MSG_DATA_READING_STOPPED() {
         return 'Error -> Data reading stopped';
+    }
+    /**
+     * 
+     */
+    static get ERROR_MSG_ () {
+        return Msg;
     }
     /***********************************************END КОНСТАНТЫ*************************************************/
     /**

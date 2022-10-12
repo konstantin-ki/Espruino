@@ -113,3 +113,4 @@ class ClassBaseSPIBus {
             } 
     }
 }
+exports = ClassBaseSPIBus; //экспортируем класс, ВНИМАНИЕ - именно класс а не объект!

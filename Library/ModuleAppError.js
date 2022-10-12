@@ -9,4 +9,4 @@ class ErrorAppUser extends Error {
         this.Code = _code || 0; //поле с кодом ошибки
     }
 }
-exports = ErrorAppUser; //экспортируем класс (ВНИМАНИЕ - именно класс а не объект!)
+exports = ErrorAppUser; //экспортируем класс, ВНИМАНИЕ - именно класс а не объект!

@@ -88,8 +88,6 @@ class ClassBaseSDcard {
     ConnectSD() {
         E.connectSDCard(this.SD.SPIBusParam, this.SD.CSpin); //инициализация SD карты в системе Espruino
             this.FlagStatusSD = true; //карта смонтирована
-        //*DEBUG*/ console.log(`DEBUG-> SD card mount`); //DEBUG
-        //*DEBUG*/ Terminal.println(`SD card mount`); //DEBUG
     }
     /**
      * Метод DisconnectSD "размонтирует" карту SD, готовя ее к извлечению
@@ -132,3 +130,4 @@ class ClassBaseSDcard {
         }
     }
 }
+exports = ClassBaseSDcard; //экспортируем класс, ВНИМАНИЕ - именно класс а не объект!

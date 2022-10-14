@@ -1,4 +1,5 @@
 /**
+ * @class
  * Класс ClassBaseSDcard реализует базовые операции с SD картой.
  * Задачи класса динамически создавать объекты для работы с SD картами и обеспечивать
  * прикладные классы  операциями чтения, записи, системными и др.
@@ -11,25 +12,45 @@
  * от них, объекты шин созданы и доступны по ФИКСИРОВАННЫМ именам. При этом объекты
  * таких шин-контейнеров построены по паттерну SINGLETON, и в RUNTIME находится
  * ровно один такой объект.
- * В данном классе используется контейнер SPI шин, с именем объекта - SPIbus
+ * В данном классе используется ГЛОБАЛЬНЫЙ объект-контейнер SPI шин, с именем объекта - SPIbus
  * 
- * Аргументы конструктора:
- * @param {Object}              _spiOpt     1 - объект содержащий Pin-ы шины SPI, объект типа ObjectSPIBusParam, см. модуль ModuleBaseSPI
- * @param {Object}              _csPin      2 - Pin отвечающий за сигнал CS карты  SD
+ *  * Для работы класса понадобятся пользовательские типы данных, в том числе для передачи параметров.
+ * Далее представлены определения этих типов в соответствии с синтаксисом JSDoc.
+ * 
+ * тип для передачи аргументов для генерации SPI объекта
+ * @typedef  {Object} ObjectSPIBusParam - тип аргумента метода AddBus
+ * @property {Object} mosi      1 - порт MOSI шины SPI, обязательное поле
+ * @property {Object} miso      2 - порт MISO шины SPI, обязательное поле
+ * @property {Object} sck       3 - порт SCK шины SPI, обязательное поле
+ * Пример объекта с аргументами для генерации SPI объекта:
+ * { mosi: D2, miso: D7, sck: A5 }
+ * 
  */
 class ClassBaseSDcard {
+    /**
+     * @constructor
+     * @param {ObjectSPIBusParam}   _spiOpt   1 - объект содержащий Pin-ы шины SPI, объект типа ObjectSPIBusParam, см. модуль ModuleBaseSPI
+     * @param {Object}              _csPin    2 - Pin отвечающий за сигнал CS карты  SD
+     */
     constructor(_spiOpt, _csPin) {
         //***************************Блок объявления полей класса****************************
-        this.ClassErrorAppUser = require('ErrorAppUser'); //импортируем прикладной класс ошибок
+        /* данную конструкцию конструкцию раскоментировать в случае скачивания проекта с гитхаба, в таком случае
+           локальна библиотека будет недоступна*/
+        //this.ClassErrorAppUser = require('https://github.com/konstantin-ki/Physics-heat-capacity/blob/main/js/module/ModuleAppError.js'); //импортируем прикладной класс ошибок
+        
+        this.ClassErrorAppUser = require('ModuleAppError');
 
         /*проверить переданные аргументы на валидность*/
         if ( typeof(_csPin) === undefined ) {
             throw new ClassErrorAppUser(ClassBaseSDcard.ERROR_MSG_ARG_NOT_DEFINED + ". Arg error: _csPin",
                                         ClassBaseSDcard.ERROR_CODE_ARG_NOT_DEFINED);
         }
+
+        this.SD = { IDbus: {}, CSpin: {} }; //хранит параметры физического интерфейса для подключения SD карты
+        
         /*аргументы относящиеся к SPI шине проверяются на валидность в модуле ClassBaseSPIBus*/
         try{
-            this.SD.SPIBus = SPIbus.AddBus(_spiOpt); //сгенерировать объект SPI
+            this.SD.IDbus = SPIbus.AddBus(_spiOpt).IDbus; //сгенерировать объект SPI. ВНИМАНИЕ объект SPIbus - глобальный
         } catch(e){
             console.log(e.message); //описание исключения см. в модуле ModuleBaseSPI
         }
@@ -49,7 +70,6 @@ class ClassBaseSDcard {
         */
     }
     /***********************************************КОНСТАНТЫ КЛАССА***********************************************/
-
     /**
      * Константа класса ERROR_CODE_ARG_NOT_DEFINED определяет КОД ошибки, которая может
      * произойти если при передачи в конструктор не корректных аргументов
@@ -86,7 +106,7 @@ class ClassBaseSDcard {
      * Метод ConnectSD "монтирует" карту SD
      */
     ConnectSD() {
-        E.connectSDCard(this.SD.SPIBusParam, this.SD.CSpin); //инициализация SD карты в системе Espruino
+        E.connectSDCard(this.SD.IDbus, this.SD.CSpin); //инициализация SD карты в системе Espruino
             this.FlagStatusSD = true; //карта смонтирована
     }
     /**
